@@ -16,7 +16,7 @@ import {
   convertTestDepGraphResultToLegacy,
   LegacyVulnApiResult,
 } from './legacy';
-import { IacTestResult } from './iac-test-result';
+import { IacTest } from './iac-test-result';
 import {
   AuthFailedError,
   InternalServerError,
@@ -79,7 +79,7 @@ async function sendAndParseResults(
     if (options.iac) {
       const iacScan: IacScan = payload.body as IacScan;
       analytics.add('iac type', !!iacScan.type);
-      const res = (await sendTestPayload(payload)) as IacTestResult;
+      const res = (await sendTestPayload(payload)) as IacTest;
 
       const projectName =
         iacScan.projectNameOverride || iacScan.originalProjectName;
@@ -267,7 +267,7 @@ async function parseRes(
 
 function sendTestPayload(
   payload: Payload,
-): Promise<LegacyVulnApiResult | TestDepGraphResponse | IacTestResult> {
+): Promise<LegacyVulnApiResult | TestDepGraphResponse | IacTest> {
   const filesystemPolicy = payload.body && !!payload.body.policy;
   return new Promise((resolve, reject) => {
     request(payload, (error, res, body) => {
