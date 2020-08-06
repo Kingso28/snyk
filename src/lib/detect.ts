@@ -5,6 +5,10 @@ import * as _ from '@snyk/lodash';
 import { NoSupportedManifestsFoundError } from './errors';
 import { SupportedPackageManagers } from './package-managers';
 import { validateK8sFile } from './iac/iac-parser';
+import {
+  UnsupportedLocalFolderIacError,
+  UnsupportedOptionFileIacError,
+} from './errors/unsupported-options-iac-error';
 
 const debug = debugLib('snyk-detect');
 
@@ -140,24 +144,25 @@ export function detectPackageManager(root: string, options) {
 }
 
 export function isIacProject(root: string, options): string {
-  if (!isLocalFolder(root)) {
-    debug('Iac - repo case ' + root);
-    throw "iac option doesn't support lookup as repo";
+  if (isLocalFolder(root)) {
+    debug('Iac - folder case ' + root);
+    throw UnsupportedLocalFolderIacError();
   }
 
-  if (!options.file) {
-    debug('Iac - no file specified ' + root);
-    throw 'iac option works only with specified files';
+  if (options.file) {
+    debug('Iac - --file specified ' + root);
+    throw UnsupportedOptionFileIacError(root);
   }
 
-  if (localFileSuppliedButNotFound(root, options.file)) {
-    throw new Error(
-      'Could not find the specified file: ' +
-        options.file +
-        '\nPlease check that it exists and try again.',
-    );
+  if (localFileSuppliedButNotFound(root, '.')) {
+    throw UnsupportedLocalFolderIacError();
   }
-  const filePath = pathLib.resolve(root, options.file);
+
+  if (!fs.existsSync(root)) {
+    throw UnsupportedLocalFolderIacError();
+  }
+
+  const filePath = pathLib.resolve(root, '.');
   const fileContent = fs.readFileSync(filePath, 'utf-8');
   validateK8sFile(fileContent, filePath, root);
   return 'k8sconfig';

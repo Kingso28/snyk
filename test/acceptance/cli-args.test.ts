@@ -67,7 +67,7 @@ test('snyk test command should fail when iac file is not specified', (t) => {
     }
     t.match(
       stdout.trim(),
-      'iac option works only with specified files',
+      'iac test option currently support a single local file only',
       'correct error output',
     );
   });
