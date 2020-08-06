@@ -1,6 +1,6 @@
 import { getWorkspaceJSON } from '../workspace-helper';
 import * as _ from '@snyk/lodash';
-import { mapIaCTestResult } from '../../../src/lib/snyk-test/iac-test-result';
+import { mapIacTestResult } from '../../../src/lib/snyk-test/iac-test-result';
 
 const iacTestPrep = async (
   t,
@@ -61,7 +61,7 @@ export const iacTestJson = async (t, utils, params, severityThreshold) => {
   t.is(req.query.severityThreshold, severityThreshold);
 
   const results = JSON.parse(testableObject.message);
-  const expectedResults = mapIaCTestResult(
+  const expectedResults = mapIacTestResult(
     getWorkspaceJSON(
       'iac-kubernetes',
       `test-iac-${severityThreshold}-result.json`,

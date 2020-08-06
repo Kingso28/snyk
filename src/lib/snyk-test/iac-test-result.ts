@@ -9,6 +9,7 @@ export interface AnnotatedIacIssue {
   cloudConfigPath: string[];
   type: string;
   subType: string;
+  path: string[];
   // Legacy fields from Registry, unused.
   name?: string;
   from?: string[];
@@ -16,7 +17,7 @@ export interface AnnotatedIacIssue {
 
 type FILTERED_OUT_FIELDS = 'cloudConfigPath' | 'name' | 'from';
 
-export interface IacTest extends BasicResultData {
+export interface IacTestResponse extends BasicResultData {
   targetFile: string;
   projectName: string;
   displayTargetFile: string; // used for display only
@@ -30,7 +31,9 @@ export interface IacTest extends BasicResultData {
 
 const IAC_ISSUES_KEY = 'infrastructureAsCodeIssues';
 
-export const mapIaCTestResult = (iacTest: IacTest) => {
+export const mapIacTestResult = function(
+  iacTest: IacTestResponse,
+): MappedIacTestResponse | IacTestError {
   if (iacTest instanceof Error) {
     return {
       ok: false,
@@ -38,14 +41,16 @@ export const mapIaCTestResult = (iacTest: IacTest) => {
       path: (iacTest as any).path,
     };
   }
-  iacTest.result[IAC_ISSUES_KEY] =
-    iacTest?.result?.cloudConfigResults.map(mapIacIssue) || [];
+
+  const {
+    result: { projectType },
+    ...filteredIacTest
+  } = iacTest;
   return {
-    ...iacTest,
-    ...iacTest.result,
-    result: undefined,
-    meta: undefined,
-    cloudConfigResults: undefined,
+    ...filteredIacTest,
+    projectType,
+    [IAC_ISSUES_KEY]:
+      iacTest?.result?.cloudConfigResults.map(mapIacIssue) || [],
   };
 };
 
@@ -55,12 +60,15 @@ export const mapIaCTestResult = (iacTest: IacTest) => {
  * The types above, IacTestResult & AnnotatedIacIssue, represent how the response from Registry actually is.
  * These were introduced in order to prevent cascading complex changes caused by changing Registry's `test-iac` response.
  */
+export interface IacTestError {
+  ok: boolean;
+  error: string;
+  path: string;
+}
 
-export interface MappedIacTest extends Omit<IacTest, 'result'> {
-  result: {
-    [IAC_ISSUES_KEY]: MappedAnnotatedIacIssue[];
-    projectType: string;
-  };
+export interface MappedIacTestResponse extends Omit<IacTestResponse, 'result'> {
+  [IAC_ISSUES_KEY]: MappedAnnotatedIacIssue[];
+  projectType: string;
 }
 
 export interface MappedAnnotatedIacIssue
@@ -68,9 +76,9 @@ export interface MappedAnnotatedIacIssue
   path: string[];
 }
 
-export const mapIacIssue = (
+export const mapIacIssue = function(
   iacIssue: AnnotatedIacIssue,
-): MappedAnnotatedIacIssue => {
+): MappedAnnotatedIacIssue {
   // filters out & renames properties we're getting from registry and don't need for the JSON output.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { cloudConfigPath: path, name, from, ...mappedIacIssue } = iacIssue;

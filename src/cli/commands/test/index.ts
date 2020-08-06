@@ -25,8 +25,8 @@ import {
   VulnMetaData,
 } from '../../../lib/snyk-test/legacy';
 import {
-  MappedIacTest,
-  mapIaCTestResult,
+  IacTestResponse,
+  mapIacTestResult,
 } from '../../../lib/snyk-test/iac-test-result';
 import {
   SupportedPackageManagers,
@@ -184,7 +184,7 @@ async function test(...args: MethodArgs): Promise<TestCommandResult> {
   // values depend on `options.json` value - string or object
   const errorMappedResults = !options.iac
     ? createErrorMappedResultsForJsonOutput(results)
-    : results.map(mapIaCTestResult);
+    : results.map(mapIacTestResult);
 
   // backwards compat - strip array IFF only one result
   const dataToSend =
@@ -472,7 +472,7 @@ function displayResult(
 
   if (res.packageManager === 'k8sconfig') {
     return getIacDisplayedOutput(
-      (res as any) as MappedIacTest,
+      (res as any) as IacTestResponse,
       testedInfoText,
       meta,
       prefix,

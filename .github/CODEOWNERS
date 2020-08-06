@@ -11,4 +11,8 @@ src/lib/snyk-test/iac-test-result.ts @snyk/cloudconfig
 src/lib/snyk-test/payload-schema.ts @snyk/cloudconfig
 src/lib/snyk-test/run-iac-test.ts @snyk/cloudconfig
 test/acceptance/cli-test/cli-test.iac-k8s.spec.ts @snyk/cloudconfig
+test/acceptance/workspaces/iac-kubernetes/test-iac-low-result.json @snyk/cloudconfig
+test/acceptance/workspaces/iac-kubernetes/test-iac-medium-result.json @snyk/cloudconfig
+test/acceptance/workspaces/iac-kubernetes/test-iac-high-result.json @snyk/cloudconfig
+test/acceptance/cli-test/cli-test.iac-k8s.utils.ts @snyk/cloudconfig
 src/lib/errors/invalid-iac-file.ts @snyk/cloudconfig

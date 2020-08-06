@@ -1,8 +1,8 @@
 import chalk from 'chalk';
 import * as Debug from 'debug';
 import {
-  MappedIacTest,
-  MappedAnnotatedIacIssue,
+  IacTestResponse,
+  AnnotatedIacIssue,
 } from '../../../lib/snyk-test/iac-test-result';
 import { getSeverityValue } from './formatters';
 import { printPath } from './formatters/remediation-based-format-issues';
@@ -10,7 +10,7 @@ import { titleCaseText } from './formatters/legacy-format-issue';
 const debug = Debug('iac-output');
 
 function formatIacIssue(
-  issue: MappedAnnotatedIacIssue,
+  issue: AnnotatedIacIssue,
   isNew: boolean,
   path: string[],
 ): string {
@@ -68,7 +68,7 @@ function extractOverview(description: string): string {
 }
 
 export function getIacDisplayedOutput(
-  iacTest: MappedIacTest,
+  iacTest: IacTestResponse,
   testedInfoText: string,
   meta: string,
   prefix: string,
@@ -79,14 +79,15 @@ export function getIacDisplayedOutput(
 
   const NotNew = false;
 
-  const issues: MappedAnnotatedIacIssue[] =
-    iacTest.result.infrastructureAsCodeIssues;
+  const issues: AnnotatedIacIssue[] = iacTest.result.cloudConfigResults;
   debug(`iac display output - ${issues.length} issues`);
 
   issues
     .sort((a, b) => getSeverityValue(b.severity) - getSeverityValue(a.severity))
     .forEach((issue) => {
-      issuesTextArray.push(formatIacIssue(issue, NotNew, issue.path));
+      issuesTextArray.push(
+        formatIacIssue(issue, NotNew, issue.cloudConfigPath),
+      );
     });
 
   const issuesInfoOutput: string[] = [];
