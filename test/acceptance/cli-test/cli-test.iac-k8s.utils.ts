@@ -1,6 +1,9 @@
-import { getWorkspaceJSON } from '../workspace-helper';
 import * as _ from '@snyk/lodash';
-import { mapIacTestResult } from '../../../src/lib/snyk-test/iac-test-result';
+import {
+  mapIacTestResult,
+  AnnotatedIacIssue,
+  IacTestResponse,
+} from '../../../src/lib/snyk-test/iac-test-result';
 
 const iacTestPrep = async (
   t,
@@ -9,13 +12,8 @@ const iacTestPrep = async (
   severityThreshold,
   additionaLpropsForCli,
 ) => {
-  utils.chdirWorkspaces();
-  params.server.setNextResponse(
-    getWorkspaceJSON(
-      'iac-kubernetes',
-      `test-iac-${severityThreshold}-result.json`,
-    ),
-  );
+  const iacTestResponse = iacTestResponseFixturesByThreshold[severityThreshold];
+  params.server.setNextResponse(iacTestResponse);
 
   try {
     await params.cli.test('iac-kubernetes', {
@@ -62,10 +60,7 @@ export const iacTestJson = async (t, utils, params, severityThreshold) => {
 
   const results = JSON.parse(testableObject.message);
   const expectedResults = mapIacTestResult(
-    getWorkspaceJSON(
-      'iac-kubernetes',
-      `test-iac-${severityThreshold}-result.json`,
-    ),
+    iacTestResponseFixturesByThreshold[severityThreshold],
   );
 
   iacTestJsonAssertions(t, results, expectedResults);
@@ -132,4 +127,54 @@ export const iacTestJsonAssertions = (
   } else {
     t.deepEqual(results.infrastructureAsCodeIssues, []);
   }
+};
+
+const generateDummyIssue = (severity): AnnotatedIacIssue => ({
+  id: 'SNYK-CC-K8S-1',
+  title: 'Reducing the admission of containers with dropped capabilities',
+  name: 'Reducing the admission of containers with dropped capabilities',
+  from: [],
+  description:
+    '## Overview Privileged containers can do nearly everything a process on the host can do, and provide no isolation from other workloads. Avoid where possible. ## Remediation Change to `false` ## References ad',
+  cloudConfigPath: ['[DocId: 2]', 'input', 'spec', 'requiredDropCapabilities'],
+  severity,
+  isIgnored: false,
+  type: 'k8s',
+  subType: 'Deployment',
+  path: [],
+});
+
+const generateDummyTestData = (
+  cloudConfigResults: Array<AnnotatedIacIssue>,
+): IacTestResponse => ({
+  targetFile: '',
+  projectName: '',
+  displayTargetFile: '',
+  foundProjectCount: 1,
+  ok: false,
+  org: '',
+  summary: '',
+  isPrivate: false,
+  result: {
+    projectType: 'k8sconfig',
+    cloudConfigResults,
+  },
+  meta: {
+    org: 'test-org',
+    isPublic: false,
+    isLicensesEnabled: false,
+    policy: '',
+  },
+});
+
+export const iacTestResponseFixturesByThreshold = {
+  high: generateDummyTestData(
+    ['high'].map((severity) => generateDummyIssue(severity)),
+  ),
+  medium: generateDummyTestData(
+    ['high', 'medium'].map((severity) => generateDummyIssue(severity)),
+  ),
+  low: generateDummyTestData(
+    ['high', 'medium', 'low'].map((severity) => generateDummyIssue(severity)),
+  ),
 };
