@@ -37,7 +37,7 @@ export const IacK8sTests: AcceptanceTests = {
         t.pass('throws err');
         t.match(
           err.message,
-          'iac test option currently support a single local file only',
+          'iac test option currently support only a single local file',
           'shows err',
         );
       }
@@ -55,7 +55,7 @@ export const IacK8sTests: AcceptanceTests = {
         t.pass('throws err');
         t.match(
           err.message,
-          'iac test option currently support a single local file only',
+          'iac test option currently support only a single local file',
           'shows err',
         );
       }

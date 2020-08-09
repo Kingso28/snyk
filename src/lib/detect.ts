@@ -6,7 +6,7 @@ import { NoSupportedManifestsFoundError } from './errors';
 import { SupportedPackageManagers } from './package-managers';
 import { validateK8sFile } from './iac/iac-parser';
 import {
-  UnsupportedLocalFolderIacError,
+  SupportLocalFileOnlyIacError,
   UnsupportedOptionFileIacError,
 } from './errors/unsupported-options-iac-error';
 
@@ -144,22 +144,18 @@ export function detectPackageManager(root: string, options) {
 }
 
 export function isIacProject(root: string, options): string {
+  if (options.file) {
+    debug('Iac - --file specified ' + options.file);
+    throw UnsupportedOptionFileIacError(options.file);
+  }
+
   if (isLocalFolder(root)) {
     debug('Iac - folder case ' + root);
-    throw UnsupportedLocalFolderIacError();
+    throw SupportLocalFileOnlyIacError();
   }
 
-  if (options.file) {
-    debug('Iac - --file specified ' + root);
-    throw UnsupportedOptionFileIacError(root);
-  }
-
-  if (localFileSuppliedButNotFound(root, '.')) {
-    throw UnsupportedLocalFolderIacError();
-  }
-
-  if (!fs.existsSync(root)) {
-    throw UnsupportedLocalFolderIacError();
+  if (localFileSuppliedButNotFound(root, '.') || !fs.existsSync(root)) {
+    throw SupportLocalFileOnlyIacError();
   }
 
   const filePath = pathLib.resolve(root, '.');
